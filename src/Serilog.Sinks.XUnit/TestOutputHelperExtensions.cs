@@ -29,9 +29,8 @@ public static class TestOutputHelperExtensions
         LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
         string outputTemplate = TestOutputLoggerConfigurationExtensions.DefaultConsoleOutputTemplate,
         IFormatProvider? formatProvider = null,
-        LoggingLevelSwitch? levelSwitch = null)
-    {
-        return new LoggerConfiguration()
+        LoggingLevelSwitch? levelSwitch = null) =>
+        new LoggerConfiguration()
             .WriteTo.TestOutput(
                 testOutputHelper,
                 restrictedToMinimumLevel,
@@ -39,7 +38,6 @@ public static class TestOutputHelperExtensions
                 formatProvider!,
                 levelSwitch!)
             .CreateLogger();
-    }
 
     /// <summary>
     /// Initializes a new Serilog logger that writes to xunit's <paramref name="testOutputHelper"/>.
@@ -58,14 +56,12 @@ public static class TestOutputHelperExtensions
         this ITestOutputHelper testOutputHelper,
         ITextFormatter formatter,
         LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-        LoggingLevelSwitch? levelSwitch = null)
-    {
-        return new LoggerConfiguration()
+        LoggingLevelSwitch? levelSwitch = null) =>
+        new LoggerConfiguration()
             .WriteTo.TestOutput(
                 testOutputHelper,
                 formatter,
                 restrictedToMinimumLevel,
                 levelSwitch!)
             .CreateLogger();
-    }
 }

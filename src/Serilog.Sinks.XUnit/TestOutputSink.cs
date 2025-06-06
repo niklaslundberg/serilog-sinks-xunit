@@ -1,5 +1,4 @@
 using Xunit;
-using Xunit.v3;
 
 namespace Serilog.Sinks.XUnit;
 
@@ -8,7 +7,6 @@ using System.IO;
 using Core;
 using Events;
 using Formatting;
-using Xunit.Sdk;
 
 /// <summary>
 /// A sink to direct Serilog output to the XUnit test output
@@ -35,11 +33,11 @@ public class TestOutputSink : ILogEventSink
     /// <param name="logEvent">The event being logged</param>
     public void Emit(LogEvent logEvent)
     {
-        if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
+        ArgumentNullException.ThrowIfNull(logEvent);
 
         var renderSpace = new StringWriter();
         _textFormatter.Format(logEvent, renderSpace);
-        var message = renderSpace.ToString().Trim();
-        _testOutputHelper?.WriteLine(message);
+        string message = renderSpace.ToString().Trim();
+        _testOutputHelper.WriteLine(message);
     }
 }
