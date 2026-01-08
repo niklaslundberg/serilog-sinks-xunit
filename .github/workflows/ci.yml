@@ -1,0 +1,29 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: windows-2025
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    - name: install-tools
+      run: |
+        dotnet tool install --global Arbor.Tooler.GlobalTool --version "*-*"
+        dotnet tool install --global Arbor.Build.Bootstrapper --version "*-*"
+    - name: build
+      shell: cmd
+      env:
+        Arbor.Build.NuGet.PackageUpload.Server.ApiKey: ${{ secrets.myget }}
+        Arbor.Build.NuGet.PackageUpload.Server.Uri: "https://www.myget.org/F/arbor/api/v2/package"
+        Arbor.Build.NuGet.PackageUpload.Enabled: "true"
+        Arbor.Build.NuGet.PackageUpload.ForceUploadEnabled: "true"
+      run: |
+        build\build.bat
