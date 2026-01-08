@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<Description>The xUnit test output sink for Serilog</Description>
 		<AssemblyName>Serilog.Sinks.XUnit</AssemblyName>
-		<PackageId>Serilog.Sinks.Arbor.XUnitvV3</PackageId>
+		<PackageId>Serilog.Sinks.Arbor.XUnitV3</PackageId>
 		<PackageTags>logging Serilog xUnit output ITestOutputHelper</PackageTags>
 		<Copyright>Copyright © 2017 Todd Benning, Niklas Lundberg 2025-2026</Copyright>
 		<Authors>Niklas Lundberg</Authors>
