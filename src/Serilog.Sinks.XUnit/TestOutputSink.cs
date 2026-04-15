@@ -4,6 +4,7 @@ namespace Serilog.Sinks.XUnit;
 
 using System;
 using System.IO;
+using System.Text;
 using Core;
 using Events;
 using Formatting;
@@ -13,6 +14,18 @@ using Formatting;
 /// </summary>
 public class TestOutputSink : ILogEventSink
 {
+    // Thread-local StringWriter (backed by a reusable StringBuilder) avoids per-emit heap allocations
+    // and is inherently lock-free because each thread operates on its own instance.
+    [ThreadStatic]
+    private static StringWriter? _threadLocalWriter;
+
+    // Capacity used when creating or resetting the thread-local StringBuilder.
+    private const int InitialCapacity = 512;
+
+    // If a single message causes the StringBuilder to grow beyond this threshold, the writer is
+    // replaced on the next call so the oversized buffer is released to the GC.
+    private const int MaxRetainedCapacity = 4096;
+
     private readonly ITestOutputHelper _testOutputHelper;
     private readonly ITextFormatter _textFormatter;
 
@@ -35,9 +48,31 @@ public class TestOutputSink : ILogEventSink
     {
         ArgumentNullException.ThrowIfNull(logEvent);
 
-        var renderSpace = new StringWriter();
-        _textFormatter.Format(logEvent, renderSpace);
-        string message = renderSpace.ToString().Trim();
-        _testOutputHelper.WriteLine(message);
+        // Reuse the thread-local writer and its underlying StringBuilder to avoid allocations.
+        // If a previous message grew the buffer beyond the retention threshold, replace the writer
+        // so the oversized buffer is released to the GC.
+        var writer = _threadLocalWriter;
+        if (writer is null || writer.GetStringBuilder().Capacity > MaxRetainedCapacity)
+        {
+            _threadLocalWriter = writer = new StringWriter(new StringBuilder(InitialCapacity));
+        }
+
+        var sb = writer.GetStringBuilder();
+        sb.Clear();
+
+        _textFormatter.Format(logEvent, writer);
+
+        // Trim trailing whitespace in-place on the StringBuilder (avoids allocating a full trimmed copy).
+        int end = sb.Length;
+        while (end > 0 && char.IsWhiteSpace(sb[end - 1]))
+            end--;
+
+        // Trim leading whitespace.
+        int start = 0;
+        while (start < end && char.IsWhiteSpace(sb[start]))
+            start++;
+
+        // A single ToString call produces the final string; no intermediate trimmed copy needed.
+        _testOutputHelper.WriteLine(start < end ? sb.ToString(start, end - start) : string.Empty);
     }
 }
